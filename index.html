@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>몬스터 컬렉션 - 포획 & 뽑기 게임</title>
+<title>포켓로그 스타일 무한 타워 (1~7세대)</title>
 <style>
   :root{
     --bg:#1a1c2c;
@@ -66,33 +66,54 @@
     margin-bottom:16px;
     box-shadow:0 4px 12px rgba(0,0,0,0.3);
   }
-  .encounter-area{text-align:center;}
+  .battle-arena{
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:20px;
+    margin-bottom:20px;
+  }
+  .battle-box{
+    text-align:center;
+    background:var(--panel2);
+    padding:15px;
+    border-radius:12px;
+    width:220px;
+  }
   .mon-img{
-    width:160px;height:160px;
+    width:130px;height:130px;
     object-fit:contain;
     image-rendering:pixelated;
-    background:var(--panel2);
-    border-radius:16px;
-    padding:10px;
   }
-  .mon-name{font-size:1.4rem;margin:10px 0 4px;}
-  .mon-level{color:var(--muted);}
+  .hp-bar-bg{
+    background:#12131f;
+    border-radius:10px;
+    height:12px;
+    width:100%;
+    margin-top:8px;
+    overflow:hidden;
+  }
+  .hp-bar-fill{
+    background:var(--accent2);
+    height:100%;
+    width:100%;
+    transition:width 0.3s;
+  }
   .btn{
     background:var(--accent2);
     border:none;
     color:#111;
     font-weight:bold;
-    padding:12px 22px;
-    border-radius:10px;
+    padding:10px 20px;
+    border-radius:8px;
     cursor:pointer;
-    font-size:1rem;
-    margin:6px;
+    font-size:0.95rem;
+    margin:4px;
     transition:0.15s;
   }
   .btn:hover{filter:brightness(1.1);}
-  .btn.secondary{background:var(--accent);}
   .btn.danger{background:var(--danger);color:#fff;}
-  .btn.small{padding:6px 12px;font-size:0.8rem;margin:2px;}
   .btn:disabled{opacity:0.4;cursor:not-allowed;}
   .log{
     background:#12131f;
@@ -100,258 +121,123 @@
     padding:12px;
     height:140px;
     overflow-y:auto;
-    font-size:0.9rem;
+    font-size:0.88rem;
     color:var(--muted);
-    margin-top:14px;
   }
-  .log div{margin-bottom:4px;}
   .log .good{color:var(--accent2);}
   .log .rare{color:var(--accent);}
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
-    gap:12px;
-  }
-  .mon-card{
-    background:var(--panel2);
-    border-radius:12px;
-    padding:10px;
-    text-align:center;
-    position:relative;
-  }
-  .mon-card img{width:80px;height:80px;object-fit:contain;image-rendering:pixelated;}
-  .mon-card .name{font-size:0.85rem;margin-top:4px;}
-  .mon-card .lvl{font-size:0.75rem;color:var(--accent);}
-  .rarity-badge{
-    position:absolute;top:4px;right:4px;
-    font-size:0.65rem;
-    padding:2px 6px;
-    border-radius:8px;
-    background:#000a;
-  }
-  .moves{
-    display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:6px;
-  }
-  .move-chip{
-    background:#12131f;
-    color:var(--accent2);
-    font-size:0.62rem;
-    padding:2px 6px;
-    border-radius:8px;
-  }
-  .empty{color:var(--muted);text-align:center;padding:30px;}
-  .gacha-result{
+  .shop-item{
     display:flex;
-    justify-content:center;
-    gap:16px;
-    flex-wrap:wrap;
-    margin-top:16px;
-  }
-  footer{
-    text-align:center;
-    color:var(--muted);
-    font-size:0.8rem;
-    padding:20px;
-  }
-  .tm-item{
-    display:flex;justify-content:space-between;align-items:center;
-    background:var(--panel2);padding:10px 14px;border-radius:10px;margin-bottom:8px;
-    flex-wrap:wrap;gap:8px;
-  }
-  .tm-item select{
-    background:#12131f;color:var(--text);border:none;padding:6px 8px;border-radius:6px;
-  }
-  .dex-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(72px,1fr));
-    gap:8px;
-  }
-  .dex-cell{
+    justify-content:space-between;
+    align-items:center;
     background:var(--panel2);
-    border-radius:10px;
-    padding:6px 4px 4px;
-    text-align:center;
-  }
-  .dex-cell img{width:56px;height:56px;object-fit:contain;image-rendering:pixelated;}
-  .dex-cell.locked img{filter:brightness(0) saturate(0);opacity:0.35;}
-  .dex-cell .num{font-size:0.6rem;color:var(--muted);}
-  .dex-controls{
-    display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;
-  }
-  .dex-controls input{
-    padding:8px 12px;border-radius:8px;border:none;background:var(--panel2);color:var(--text);
+    padding:16px;
+    border-radius:8px;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🎮 몬스터 컬렉션</h1>
+  <h1>⚔️ 포켓로그 - 무한 타워</h1>
   <div class="stat-bar">
-    <span>트레이너 Lv <b id="trainerLevel">1</b></span>
-    <span>🎫 뽑기권 <b id="ticketCount">0</b></span>
-    <span>📀 몬스터볼 <b id="ballCount">10</b></span>
-    <span>📖 도감 <b id="dexCount">0</b>/<b id="dexTotal">0</b></span>
+    <span>🚩 현재 층수: <b id="waveText">1</b>층</span>
+    <span>💰 골드: <b id="goldText">0</b> G</span>
+    <span>💎 메가스톤: <b id="megaStoneText">0</b> 개</span>
   </div>
 </header>
 
 <nav>
-  <button class="active" data-tab="explore">탐험하기</button>
-  <button data-tab="gacha">뽑기</button>
-  <button data-tab="collection">내 컬렉션</button>
-  <button data-tab="alldex">전체 도감</button>
-  <button data-tab="tm">기술머신</button>
+  <button class="active" data-tab="battle">전투</button>
+  <button data-tab="shop">상점</button>
+  <button data-tab="party">내 파티</button>
 </nav>
 
 <main>
+  <!-- 전투 탭 -->
+  <div class="tab active" id="tab-battle">
+    <div class="card">
+      <div class="battle-arena">
+        <!-- 아군 -->
+        <div class="battle-box">
+          <div><b>[아군]</b> <span id="playerMonName">이상해씨</span></div>
+          <img id="playerMonImg" class="mon-img" src="" alt="player mon">
+          <div>Lv. <span id="playerMonLvl">5</span> | HP: <span id="playerHpText">35/35</span></div>
+          <div class="hp-bar-bg"><div id="playerHpBar" class="hp-bar-fill"></div></div>
+        </div>
+        
+        <div style="font-size:1.5rem; font-weight:bold; color:var(--danger);">VS</div>
 
-  <!-- 탐험 -->
-  <div class="tab active" id="tab-explore">
-    <div class="card encounter-area">
-      <div id="encounterEmpty">
-        <p>야생 몬스터를 찾으러 떠나볼까요?</p>
-        <button class="btn" id="exploreBtn">🔍 탐험하기</button>
-      </div>
-      <div id="encounterBox" style="display:none;">
-        <img id="wildImg" class="mon-img" src="" alt="wild monster">
-        <div class="mon-name" id="wildName">-</div>
-        <div class="mon-level">야생 Lv <span id="wildLevel">1</span></div>
-        <div>
-          <button class="btn" id="catchBtn">📀 포획 시도</button>
-          <button class="btn secondary" id="runBtn">🏃 도망가기</button>
+        <!-- 적 -->
+        <div class="battle-box">
+          <div><b>[적]</b> <span id="enemyMonName">-</span></div>
+          <img id="enemyMonImg" class="mon-img" src="" alt="enemy mon">
+          <div>Lv. <span id="enemyMonLvl">1</span> | HP: <span id="enemyHpText">0/0</span></div>
+          <div class="hp-bar-bg"><div id="enemyHpBar" class="hp-bar-fill" style="background:var(--danger)"></div></div>
         </div>
       </div>
+
+      <div style="text-align:center; margin-bottom:12px;">
+        <button class="btn" id="attackBtn">⚔️ 일반 공격</button>
+        <button class="btn" id="skillBtn" style="background:var(--accent);">🔥 특수 기술</button>
+        <button class="btn danger" id="nextWaveBtn" style="display:none;">▶️ 다음 층 진행</button>
+      </div>
+
       <div class="log" id="log"></div>
     </div>
   </div>
 
-  <!-- 뽑기 -->
-  <div class="tab" id="tab-gacha">
-    <div class="card" style="text-align:center;">
-      <h2>✨ 몬스터 뽑기</h2>
-      <p style="color:var(--muted)">뽑기권 1장으로 랜덤 몬스터 1마리를 획득합니다.<br>
-      확률: ⭐일반 70% · ⭐⭐레어 25% · ⭐⭐⭐희귀 5%</p>
-      <button class="btn" id="gachaBtn">🎰 뽑기 1회 (뽑기권 1장)</button>
-      <button class="btn secondary" id="gacha10Btn">🎰 뽑기 10연차 (뽑기권 10장)</button>
-      <div class="gacha-result" id="gachaResult"></div>
-    </div>
-  </div>
-
-  <!-- 컬렉션 -->
-  <div class="tab" id="tab-collection">
+  <!-- 상점 탭 -->
+  <div class="tab" id="tab-shop">
     <div class="card">
-      <h2>📖 내 몬스터 컬렉션</h2>
-      <div class="grid" id="collectionGrid"><div class="empty">아직 잡은 몬스터가 없어요.</div></div>
-    </div>
-  </div>
-
-  <!-- 전체 도감 -->
-  <div class="tab" id="tab-alldex">
-    <div class="card">
-      <h2>🗺️ 전체 도감</h2>
-      <div class="dex-controls">
-        <input type="text" id="dexSearch" placeholder="이름 또는 번호로 검색...">
-        <span style="color:var(--muted);font-size:0.85rem;" id="dexLoadStatus"></span>
+      <h2>🏪 메가 상점</h2>
+      <div class="shop-item">
+        <div>
+          <b style="font-size:1.1rem; color:var(--accent);">💎 메가스톤</b> - 5,000 G<br>
+          <small style="color:var(--muted)">최종 진화 형태 포켓몬을 강력한 메가진화 폼으로 각성시킵니다.</small>
+        </div>
+        <button class="btn" id="buyMegaBtn">구매</button>
       </div>
-      <div class="dex-grid" id="allDexGrid"></div>
     </div>
   </div>
 
-  <!-- 기술머신 -->
-  <div class="tab" id="tab-tm">
-    <div class="card">
-      <h2>💿 보유 기술머신 (TM)</h2>
-      <p style="color:var(--muted)">몬스터 포획에 성공하면 15% 확률로 기술머신을 획득합니다. 보유한 몬스터를 선택해서 기술을 가르칠 수 있어요 (최대 4개, 초과 시 가장 오래된 기술이 교체됩니다).</p>
-      <div id="tmList"><div class="empty">보유한 기술머신이 없어요.</div></div>
+  <!-- 내 파티 탭 -->
+  <div class="tab" id="tab-party">
+    <div class="card" style="text-align:center;">
+      <h2>포켓몬 정보</h2>
+      <img id="partyImg" class="mon-img" src="" alt="party mon">
+      <h3 id="partyName">이상해씨</h3>
+      <p>레벨: <span id="partyLvl">5</span> | 공격력: <span id="partyAtk">12</span> | MaxHP: <span id="partyMaxHp">35</span></p>
+      <button class="btn" id="megaEvolveBtn" style="display:none; background:var(--accent);">✨ 메가진화 실행</button>
     </div>
   </div>
-
 </main>
-
-<footer>
-  ※ 본 게임은 비공식 팬 프로젝트이며 몬스터 이미지는 로컬 images/ 폴더의 파일을 사용합니다. 저장은 브라우저(localStorage)에 자동으로 됩니다.
-</footer>
 
 <script src="data.js"></script>
 <script>
-// 타입별 공격기(물리/특수) 목록 - 상태이상/변화 기술은 제외
-const MOVES_BY_TYPE = {
-  "노말": ["몸통박치기","할퀴기","물기","연속뺨치기","연속펀치","메가톤펀치","회전베기","가위자르기","칼바람","풀베기","조르기","이판사판태클","하이퍼보이스","마구때리기","마구할퀴기","트라이어택","헤드번트","뿔찌르기","기가임팩트","하이퍼빔","파괴광선","스카이어택","전광석화","목숨걸기"],
-  "불꽃": ["불꽃펀치","화염방사","불태우기","불의소용돌이","과열","플레어드라이브","니트로차지","매그마스톰","불새","화염볼","플레임버스트","블레이즈킥"],
-  "물": ["물대포","거품","물의파동","하이드로펌프","파도타기","아쿠아제트","아쿠아테일","폭포오르기","흙탕물","하이드로캐논","다이빙","크래브해머","프리즈드라이"],
-  "전기": ["전기쇼크","10만볼트","방전","전기펀치","와일드볼트","볼트체인지","스파크","볼트태클"],
-  "풀": ["덩쿨채찍","솔라빔","리프블레이드","씨앗기관총","매직리프","그래스니들","우드해머","파워위프","에너지볼","잎날가르기","트로픽킥"],
-  "얼음": ["냉동빔","눈보라","아이스볼","냉동펀치","아이시클크래시","트리플악셀"],
-  "격투": ["태권당수","인파이트","카운터","드레인펀치","마하펀치","로킥","리벤지","기합구슬","바위깨기","신비의칼","성스러운칼","더블찹","크로스촙"],
-  "독": ["독찌르기","오물폭탄","크로스포이즌","오물수류탄","스모그"],
-  "땅": ["지진","흙던지기","진흙탕","드릴라이너","모래지옥","뼈다귀메랑","대지의힘"],
-  "비행": ["부리로쪼기","날개치기","공중날기","브레이브버드","에어슬래시","바람일으키기","에어커터"],
-  "에스퍼": ["사이코키네시스","사이코쇼크","사이코브레이크","미래예지","사념의박치기","스토어드파워"],
-  "벌레": ["벌레먹기","시그널빔","트윈니들","메가혼","버그버즈"],
-  "바위": ["바위던지기","스톤에지","록블라스트","파워젬","다이아몬드스톰"],
-  "고스트": ["섀도볼","섀도펀치","섀도다이브"],
-  "드래곤": ["용의파동","드래곤클로","드래곤테일","용성군"],
-  "악": ["악의파동","기습","비수교차","크런치"],
-  "강철": ["아이언테일","아이언헤드","메탈크로우","미티어매시","강철날개"],
-  "페어리": ["문포스","요정의바람"]
-};
-const TM_MOVES = Object.values(MOVES_BY_TYPE).flat();
-const MOVE_TYPE_MAP = {};
-Object.entries(MOVES_BY_TYPE).forEach(([type, moves]) => moves.forEach(m => MOVE_TYPE_MAP[m] = type));
-
-// 세대별 전설/준전설급 예시 도감번호 (희귀도 판정용)
-const LEGENDARY_IDS = [
-  144,145,146,150,151,
-  243,244,245,249,250,251,
-  377,378,379,380,381,382,383,384,385,386,
-  480,481,482,483,484,485,486,487,488,489,490,491,492,493,
-  494,638,639,640,641,642,643,644,645,646,647,648,649,
-  716,717,718,719,720,721,
-  785,786,787,788,789,790,791,792,800,801,802,807,808,809,
-  888,889,890,891,892,893,894,895,896,897,898,
-  905,1001,1002,1003,1004,1007,1008
-];
-
-function spriteUrl(file){
+function spriteUrl(file) {
   return "images/" + encodeURIComponent(file);
 }
-function rarityOf(dex){
-  if(LEGENDARY_IDS.includes(dex)) return "rare3";
-  if(dex % 10 === 0) return "rare2";
-  return "rare1";
-}
-function rarityLabel(r){
-  return r==="rare3" ? "⭐⭐⭐" : r==="rare2" ? "⭐⭐" : "⭐";
-}
 
-// ---------- 상태 관리 ----------
-let state = loadState();
+// 플레이어 시작 설정 (이상해씨)
+let state = {
+  wave: 1,
+  gold: 0,
+  megaStones: 0,
+  playerMon: {
+    key: "이상해씨",
+    name: "이상해씨",
+    file: "001. 이상해씨.png",
+    level: 5,
+    hp: 35,
+    maxHp: 35,
+    atk: 12,
+    isMega: false
+  },
+  enemyMon: null
+};
 
-function defaultState(){
-  return {
-    trainerLevel: 1,
-    trainerExp: 0,
-    tickets: 3,
-    balls: 10,
-    collection: {},   // { speciesKey: { key, dex, name, file, level, exp, rarity, moves:[] } }
-    tms: []           // ["지진", "화염방사", ...]
-  };
-}
-function loadState(){
-  try{
-    const raw = localStorage.getItem("monster_game_save_v2");
-    if(raw) return JSON.parse(raw);
-  }catch(e){}
-  return defaultState();
-}
-function saveState(){
-  localStorage.setItem("monster_game_save_v2", JSON.stringify(state));
-}
-
-// ---------- 유틸 ----------
-function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function chance(pct){ return Math.random()*100 < pct; }
-function log(msg, cls=""){
+function log(msg, cls="") {
   const box = document.getElementById("log");
   const div = document.createElement("div");
   if(cls) div.className = cls;
@@ -359,296 +245,186 @@ function log(msg, cls=""){
   box.prepend(div);
 }
 
-// ---------- UI 갱신 ----------
-function refreshHeader(){
-  document.getElementById("trainerLevel").textContent = state.trainerLevel;
-  document.getElementById("ticketCount").textContent = state.tickets;
-  document.getElementById("ballCount").textContent = state.balls;
-  document.getElementById("dexCount").textContent = Object.keys(state.collection).length;
-  document.getElementById("dexTotal").textContent = POKEMON_DATA.length;
-}
+function updateUI() {
+  document.getElementById("waveText").textContent = state.wave;
+  document.getElementById("goldText").textContent = state.gold;
+  document.getElementById("megaStoneText").textContent = state.megaStones;
 
-function refreshCollection(){
-  const grid = document.getElementById("collectionGrid");
-  const entries = Object.values(state.collection);
-  if(entries.length === 0){
-    grid.innerHTML = '<div class="empty">아직 잡은 몬스터가 없어요.</div>';
-    return;
+  const p = state.playerMon;
+  document.getElementById("playerMonName").textContent = p.name;
+  document.getElementById("playerMonImg").src = spriteUrl(p.file);
+  document.getElementById("playerMonLvl").textContent = p.level;
+  document.getElementById("playerHpText").textContent = `${p.hp}/${p.maxHp}`;
+  document.getElementById("playerHpBar").style.width = Math.max(0, (p.hp / p.maxHp)*100) + "%";
+
+  const e = state.enemyMon;
+  if(e) {
+    document.getElementById("enemyMonName").textContent = e.name;
+    document.getElementById("enemyMonImg").src = spriteUrl(e.file);
+    document.getElementById("enemyMonLvl").textContent = e.level;
+    document.getElementById("enemyHpText").textContent = `${e.hp}/${e.maxHp}`;
+    document.getElementById("enemyHpBar").style.width = Math.max(0, (e.hp / e.maxHp)*100) + "%";
   }
-  grid.innerHTML = "";
-  entries.sort((a,b)=>a.dex-b.dex).forEach(mon=>{
-    const div = document.createElement("div");
-    div.className = "mon-card";
-    const movesHtml = (mon.moves && mon.moves.length)
-      ? `<div class="moves">${mon.moves.map(m=>`<span class="move-chip">${m}${MOVE_TYPE_MAP[m]?` (${MOVE_TYPE_MAP[m]})`:""}</span>`).join("")}</div>`
-      : `<div class="moves"><span class="move-chip" style="opacity:.5">기술 없음</span></div>`;
-    div.innerHTML = `
-      <span class="rarity-badge">${rarityLabel(mon.rarity)}</span>
-      <img src="${spriteUrl(mon.file)}" alt="${mon.name}">
-      <div class="name">${mon.name}</div>
-      <div class="lvl">Lv ${mon.level}</div>
-      ${movesHtml}
-    `;
-    grid.appendChild(div);
-  });
-}
 
-function refreshTM(){
-  const box = document.getElementById("tmList");
-  if(state.tms.length === 0){
-    box.innerHTML = '<div class="empty">보유한 기술머신이 없어요.</div>';
-    return;
-  }
-  const counts = {};
-  state.tms.forEach(t=>counts[t]=(counts[t]||0)+1);
-  const owned = Object.values(state.collection).sort((a,b)=>a.dex-b.dex);
+  document.getElementById("partyName").textContent = p.name;
+  document.getElementById("partyImg").src = spriteUrl(p.file);
+  document.getElementById("partyLvl").textContent = p.level;
+  document.getElementById("partyAtk").textContent = p.atk;
+  document.getElementById("partyMaxHp").textContent = p.maxHp;
 
-  box.innerHTML = "";
-  Object.entries(counts).forEach(([move,cnt])=>{
-    const row = document.createElement("div");
-    row.className = "tm-item";
-    const selectId = "tmSelect_" + move.replace(/\s/g,"_");
-    const options = owned.length
-      ? owned.map(m=>`<option value="${m.key}">${m.name} (Lv${m.level})</option>`).join("")
-      : `<option value="">보유한 몬스터 없음</option>`;
-    row.innerHTML = `
-      <span>💿 TM - ${move}${MOVE_TYPE_MAP[move]?` <i style="color:var(--muted);font-style:normal;font-size:0.8em;">[${MOVE_TYPE_MAP[move]}]</i>`:""} <b style="color:var(--accent)">x${cnt}</b></span>
-      <span>
-        <select id="${selectId}">${options}</select>
-        <button class="btn small" data-move="${move}" data-select="${selectId}" ${owned.length===0?"disabled":""}>가르치기</button>
-      </span>
-    `;
-    box.appendChild(row);
-  });
-
-  box.querySelectorAll("button[data-move]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const move = btn.dataset.move;
-      const sel = document.getElementById(btn.dataset.select);
-      const key = sel.value;
-      if(!key) return;
-      teachMove(key, move);
-    });
-  });
-}
-
-function teachMove(key, move){
-  const mon = state.collection[key];
-  if(!mon) return;
-  const idx = state.tms.indexOf(move);
-  if(idx === -1){ log("⚠️ 해당 기술머신이 없어요."); return; }
-  state.tms.splice(idx,1);
-
-  if(!mon.moves) mon.moves = [];
-  if(mon.moves.includes(move)){
-    log(`${mon.name} 은(는) 이미 [${move}] 을(를) 알고 있어요. 기술머신은 소모되지 않았어요.`);
-    state.tms.push(move); // 반환
-  } else if(mon.moves.length >= 4){
-    const removed = mon.moves.shift();
-    mon.moves.push(move);
-    log(`${mon.name} 이(가) [${removed}] 대신 [${move}] 을(를) 배웠다!`, "good");
+  // 메가진화 버튼 표시 조건
+  const rawData = POKEMON_DATA.find(x => x.key === p.key);
+  const megaBtn = document.getElementById("megaEvolveBtn");
+  if(rawData && rawData.megaFile && !p.isMega && state.megaStones > 0) {
+    megaBtn.style.display = "inline-block";
   } else {
-    mon.moves.push(move);
-    log(`${mon.name} 이(가) [${move}] 을(를) 배웠다!`, "good");
+    megaBtn.style.display = "none";
   }
-  refreshTM();
-  refreshCollection();
-  saveState();
 }
 
-// ---------- 탐험 / 포획 ----------
-let currentWild = null;
+// 레벨 조건 충족 시 진화 위계 자동 감지 및 진화
+function checkEvolution() {
+  const p = state.playerMon;
+  const currentData = POKEMON_DATA.find(x => x.key === p.key);
 
-function explore(){
-  const species = POKEMON_DATA[rand(0, POKEMON_DATA.length-1)];
-  const level = rand(2, 5 + state.trainerLevel*2);
-  currentWild = { ...species, level, rarity: rarityOf(species.dex) };
-
-  document.getElementById("wildImg").src = spriteUrl(species.file);
-  document.getElementById("wildName").textContent = species.name;
-  document.getElementById("wildLevel").textContent = level;
-  document.getElementById("encounterEmpty").style.display = "none";
-  document.getElementById("encounterBox").style.display = "block";
-  log(`야생의 ${species.name} (Lv.${level}) 이(가) 나타났다!`);
+  if (currentData && currentData.evolutions && currentData.evolutions.length > 0) {
+    const evoInfo = currentData.evolutions[0];
+    if (p.level >= evoInfo.level) {
+      const nextData = POKEMON_DATA.find(x => x.key === evoInfo.to);
+      if (nextData) {
+        p.key = nextData.key;
+        p.name = nextData.name;
+        p.file = nextData.file;
+        p.atk += 15;
+        p.maxHp += 30;
+        p.hp = p.maxHp;
+        log(`✨ 축하합니다! ${currentData.name}이(가) ${p.name}(으)로 진화했습니다!`, "rare");
+      }
+    }
+  }
 }
 
-function catchAttempt(){
-  if(!currentWild) return;
-  if(state.balls <= 0){
-    log("⚠️ 몬스터볼이 부족해요! 탐험을 계속하면 가끔 몬스터볼도 얻을 수 있어요.");
-    return;
-  }
-  state.balls--;
+// 야생 적 생성
+function spawnEnemy() {
+  const randIndex = Math.floor(Math.random() * POKEMON_DATA.length);
+  const species = POKEMON_DATA[randIndex];
+  
+  const level = Math.floor(1 + state.wave * 1.5);
+  const maxHp = Math.floor(20 + level * 8);
+  const atk = Math.floor(5 + level * 2.5);
 
-  let baseChance = 70 - currentWild.level*2;
-  if(currentWild.rarity === "rare2") baseChance -= 15;
-  if(currentWild.rarity === "rare3") baseChance -= 35;
-  baseChance = Math.max(10, Math.min(90, baseChance));
+  state.enemyMon = {
+    key: species.key,
+    name: species.name,
+    file: species.file,
+    level: level,
+    hp: maxHp,
+    maxHp: maxHp,
+    atk: atk
+  };
 
-  if(chance(baseChance)){
-    addToCollection(currentWild);
-    log(`🎉 ${currentWild.name} 을(를) 포획했다! (성공률 ${baseChance}%)`, "good");
-    gainTrainerExp(currentWild.level);
+  document.getElementById("attackBtn").disabled = false;
+  document.getElementById("skillBtn").disabled = false;
+  document.getElementById("nextWaveBtn").style.display = "none";
 
-    if(chance(15)){
-      const tm = TM_MOVES[rand(0, TM_MOVES.length-1)];
-      state.tms.push(tm);
-      log(`💿 기술머신 [${tm}] 을(를) 획득했다!`, "rare");
-    }
-    if(chance(10)){
-      state.tickets++;
-      log(`🎫 뽑기권을 1장 획득했다!`, "rare");
-    }
-    if(chance(20)){
-      const gained = rand(1,3);
-      state.balls += gained;
-      log(`📀 몬스터볼 ${gained}개를 발견했다!`);
-    }
-    endEncounter();
+  log(`🚩 [${state.wave}층] 야생의 ${species.name} (Lv.${level}) 이(가) 등장했습니다!`);
+  updateUI();
+}
+
+// 공격 로직
+function playerAttack(isSkill = false) {
+  if (!state.enemyMon || state.enemyMon.hp <= 0) return;
+
+  const mult = isSkill ? 1.5 : 1.0;
+  const dmg = Math.floor(state.playerMon.atk * mult + Math.random() * 4);
+  state.enemyMon.hp -= dmg;
+  
+  log(`💥 ${state.playerMon.name}의 ${isSkill ? "특수 기술" : "공격"}! ${state.enemyMon.name}에게 ${dmg}의 피해!`, "good");
+
+  if (state.enemyMon.hp <= 0) {
+    state.enemyMon.hp = 0;
+    const rewardGold = Math.floor(150 + state.enemyMon.level * 30 + state.wave * 15);
+    state.gold += rewardGold;
+    
+    state.playerMon.level++;
+    state.playerMon.maxHp += 5;
+    state.playerMon.hp = Math.min(state.playerMon.hp + 15, state.playerMon.maxHp);
+    state.playerMon.atk += 2;
+
+    log(`🎉 ${state.enemyMon.name} 격퇴! +${rewardGold} G 획득!`, "rare");
+    log(`📈 레벨 상승! Lv.${state.playerMon.level}`);
+
+    checkEvolution();
+
+    document.getElementById("attackBtn").disabled = true;
+    document.getElementById("skillBtn").disabled = true;
+    document.getElementById("nextWaveBtn").style.display = "inline-block";
   } else {
-    log(`💨 ${currentWild.name} 이(가) 몬스터볼을 뿌리치고 도망쳤다... (성공률 ${baseChance}%)`);
+    enemyAttack();
   }
-  refreshHeader();
-  saveState();
+  updateUI();
 }
 
-function addToCollection(mon){
-  const key = mon.key;
-  if(state.collection[key]){
-    const owned = state.collection[key];
-    owned.exp += 20;
-    while(owned.exp >= owned.level * 15){
-      owned.exp -= owned.level * 15;
-      owned.level++;
-      log(`✨ ${owned.name} 이(가) 레벨 ${owned.level} (으)로 올랐다!`, "good");
-    }
+function enemyAttack() {
+  const dmg = Math.floor(state.enemyMon.atk + Math.random() * 3);
+  state.playerMon.hp -= dmg;
+
+  log(`🥊 야생 ${state.enemyMon.name}의 반격! ${dmg}의 피해를 입었습니다.`);
+
+  if (state.playerMon.hp <= 0) {
+    state.playerMon.hp = 0;
+    log(`☠️ ${state.playerMon.name}이(가) 쓰러졌습니다...`, "rare");
+    document.getElementById("attackBtn").disabled = true;
+    document.getElementById("skillBtn").disabled = true;
+  }
+}
+
+// 상점 메가스톤 구매
+document.getElementById("buyMegaBtn").addEventListener("click", () => {
+  if (state.gold >= 5000) {
+    state.gold -= 5000;
+    state.megaStones++;
+    log(`💎 메가스톤을 획득했습니다!`, "rare");
+    updateUI();
   } else {
-    state.collection[key] = {
-      key: mon.key, dex: mon.dex, name: mon.name, file: mon.file,
-      level: Math.max(1, Math.floor(mon.level/2)),
-      exp: 0, rarity: mon.rarity, moves: []
-    };
+    alert("골드가 부족합니다!");
   }
-}
-
-function gainTrainerExp(wildLevel){
-  state.trainerExp += wildLevel;
-  const need = state.trainerLevel * 25;
-  if(state.trainerExp >= need){
-    state.trainerExp -= need;
-    state.trainerLevel++;
-    log(`🌟 트레이너 레벨이 ${state.trainerLevel} (으)로 올랐다!`, "good");
-  }
-}
-
-function endEncounter(){
-  currentWild = null;
-  document.getElementById("encounterEmpty").style.display = "block";
-  document.getElementById("encounterBox").style.display = "none";
-  refreshCollection();
-  refreshTM();
-  if(allDexLoaded) renderAllDex(document.getElementById("dexSearch").value);
-}
-
-function runAway(){
-  log(`🏃 ${currentWild.name} 로부터 도망쳤다.`);
-  endEncounter();
-}
-
-// ---------- 뽑기 ----------
-const RARE_POOL = POKEMON_DATA.filter(s => rarityOf(s.dex) === "rare2");
-const LEGEND_POOL = POKEMON_DATA.filter(s => rarityOf(s.dex) === "rare3");
-
-function gachaPull(count){
-  if(state.tickets < count){
-    log("⚠️ 뽑기권이 부족해요!");
-    return;
-  }
-  state.tickets -= count;
-  const resultBox = document.getElementById("gachaResult");
-  resultBox.innerHTML = "";
-
-  for(let i=0;i<count;i++){
-    const roll = Math.random()*100;
-    let species;
-    if(roll < 5 && LEGEND_POOL.length){
-      species = LEGEND_POOL[rand(0, LEGEND_POOL.length-1)];
-    } else if(roll < 30 && RARE_POOL.length){
-      species = RARE_POOL[rand(0, RARE_POOL.length-1)];
-    } else {
-      species = POKEMON_DATA[rand(0, POKEMON_DATA.length-1)];
-    }
-    const rarity = rarityOf(species.dex);
-    addToCollection({...species, level: rand(3,8), rarity});
-
-    const div = document.createElement("div");
-    div.className = "mon-card";
-    div.innerHTML = `
-      <span class="rarity-badge">${rarityLabel(rarity)}</span>
-      <img src="${spriteUrl(species.file)}" alt="${species.name}">
-      <div class="name">${species.name}</div>
-    `;
-    resultBox.appendChild(div);
-    log(`🎰 뽑기로 ${species.name} (${rarityLabel(rarity)}) 을(를) 획득했다!`, rarity!=="rare1" ? "rare" : "");
-  }
-  refreshHeader();
-  refreshCollection();
-  if(allDexLoaded) renderAllDex(document.getElementById("dexSearch").value);
-  saveState();
-}
-
-// ---------- 전체 도감 ----------
-let allDexLoaded = false;
-
-function renderAllDex(filter=""){
-  const grid = document.getElementById("allDexGrid");
-  const q = filter.trim().toLowerCase();
-  grid.innerHTML = "";
-  const frag = document.createDocumentFragment();
-
-  POKEMON_DATA.forEach(mon=>{
-    if(q && !mon.name.toLowerCase().includes(q) && String(mon.dex) !== q) return;
-    const owned = !!state.collection[mon.key];
-    const cell = document.createElement("div");
-    cell.className = "dex-cell" + (owned ? "" : " locked");
-    cell.innerHTML = `
-      <img src="${spriteUrl(mon.file)}" alt="${owned ? mon.name : '???'}" loading="lazy">
-      <div class="num">#${String(mon.dex).padStart(3,"0")}</div>
-    `;
-    frag.appendChild(cell);
-  });
-  grid.appendChild(frag);
-  allDexLoaded = true;
-  document.getElementById("dexLoadStatus").textContent = `${POKEMON_DATA.length}종 표시 중`;
-}
-
-document.getElementById("dexSearch").addEventListener("input", (e)=>{
-  renderAllDex(e.target.value);
 });
 
-// ---------- 탭 전환 ----------
-document.querySelectorAll("nav button").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+// 메가진화 기능
+document.getElementById("megaEvolveBtn").addEventListener("click", () => {
+  const p = state.playerMon;
+  const rawData = POKEMON_DATA.find(x => x.key === p.key);
+  if (rawData && rawData.megaFile && state.megaStones > 0) {
+    state.megaStones--;
+    p.isMega = true;
+    p.name = `메가${p.name}`;
+    p.file = rawData.megaFile;
+    p.atk += 40;
+    p.maxHp += 100;
+    p.hp += 100;
+    log(`✨ ${p.name}(으)로 메가진화에 성공했습니다!`, "rare");
+    updateUI();
+  }
+});
+
+document.getElementById("attackBtn").addEventListener("click", () => playerAttack(false));
+document.getElementById("skillBtn").addEventListener("click", () => playerAttack(true));
+document.getElementById("nextWaveBtn").addEventListener("click", () => {
+  state.wave++;
+  spawnEnemy();
+});
+
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     btn.classList.add("active");
-    document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
-    if(btn.dataset.tab === "alldex" && !allDexLoaded) renderAllDex();
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
   });
 });
 
-// ---------- 이벤트 바인딩 ----------
-document.getElementById("exploreBtn").addEventListener("click", explore);
-document.getElementById("catchBtn").addEventListener("click", catchAttempt);
-document.getElementById("runBtn").addEventListener("click", runAway);
-document.getElementById("gachaBtn").addEventListener("click", ()=>gachaPull(1));
-document.getElementById("gacha10Btn").addEventListener("click", ()=>gachaPull(10));
-
-// ---------- 초기 렌더 ----------
-refreshHeader();
-refreshCollection();
-refreshTM();
-log(`게임을 시작합니다. 총 ${POKEMON_DATA.length}종의 몬스터가 준비되어 있어요. 탐험을 눌러보세요!`);
+spawnEnemy();
 </script>
 </body>
 </html>
